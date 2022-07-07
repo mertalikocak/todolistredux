@@ -12,7 +12,11 @@ export const todoSlice = createSlice({
       { id: "2", title: "Read a book", completed: false },
     ],
   },
-  reducer: {},
+  reducers: {
+    addTodo: (state, action) => {
+      state.items.push(action.payload);
+    },
+  },
 });
-
+export const { addTodo } = todoSlice.actions;
 export default todoSlice.reducer;
