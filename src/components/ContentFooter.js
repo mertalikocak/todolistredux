@@ -2,7 +2,7 @@ import React from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
   changeActiveFilter,
-  clearCompleted,
+  removeAllTodoAsync,
   selectTodos,
 } from "../redux/todos/todoSlice";
 const ContentFooter = () => {
@@ -10,9 +10,10 @@ const ContentFooter = () => {
   const items = useSelector(selectTodos);
   const activeFilter = useSelector((state) => state.todos.activeFilter);
   const itemsLeft = items.filter((item) => !item.completed).length;
-  const handleDestroyAll = () => {
+  const completedItems = items.filter((item) => item.completed);
+  const handleDestroyAll = async () => {
     if (window.confirm("Are You Sure?")) {
-      dispatch(clearCompleted());
+      await dispatch(removeAllTodoAsync(completedItems));
     }
   };
   return (

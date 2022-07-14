@@ -40,11 +40,23 @@ export const removeTodoAsync = createAsyncThunk(
 );
 export const removeAllTodoAsync = createAsyncThunk(
   "todos/removeAllTodoAsync",
-  async (id) => {
-    await axios.delete(
-      `${process.env.REACT_APP_API_BASE_ENDPOINT}/todos/${id}`
+  async (completedList) => {
+    for (let index = 0; index < completedList.length; index++) {
+      var todo = completedList[index];
+      console.log(todo.id);
+      await axios.delete(
+        `${process.env.REACT_APP_API_BASE_ENDPOINT}/todos/${todo.id}`
+      );
+    }
+    /* completedList.forEach(async (todo) => {
+      await axios.delete(
+        `${process.env.REACT_APP_API_BASE_ENDPOINT}/todos/${todo.id}`
+      );
+    }) */ const res = await axios(
+      `${process.env.REACT_APP_API_BASE_ENDPOINT}/todos`
     );
-    return id;
+    console.log(res.data);
+    return res.data;
   }
 );
 
@@ -112,6 +124,10 @@ export const todoSlice = createSlice({
     [removeTodoAsync.fulfilled]: (state, action) => {
       const id = action.payload;
       const filtered = state.items.filter((item) => item.id !== id);
+      state.items = filtered;
+    },
+    [removeAllTodoAsync.fulfilled]: (state) => {
+      const filtered = state.items.filter((item) => !item.completed === true);
       state.items = filtered;
     },
   },
