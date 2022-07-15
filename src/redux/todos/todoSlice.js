@@ -3,15 +3,19 @@ import axios from "axios";
 export const getTodosAsync = createAsyncThunk(
   "todos/getTodosAsync",
   async () => {
-    const res = await axios(`${process.env.REACT_APP_API_BASE_ENDPOINT}/todos`);
-    return res.data;
+    const res = await axios.get(
+      `${process.env.REACT_APP_API_BASE_ENDPOINT}/todos-test`
+    );
+
+    return res.data.todos;
   }
 );
 export const addTodoAsync = createAsyncThunk(
   "todos/addTodoAsync",
   async (data) => {
+    console.log(data);
     const res = await axios.post(
-      `${process.env.REACT_APP_API_BASE_ENDPOINT}/todos`,
+      `${process.env.REACT_APP_API_BASE_ENDPOINT}/todos-test`,
       data
     );
     return res.data;
@@ -22,7 +26,7 @@ export const toggleTodoAsync = createAsyncThunk(
   "todos/toggleTodoAsync",
   async ({ id, data }) => {
     const res = await axios.patch(
-      `${process.env.REACT_APP_API_BASE_ENDPOINT}/todos/${id}`,
+      `${process.env.REACT_APP_API_BASE_ENDPOINT}/todos-test/${id}`,
       data
     );
     return res.data;
@@ -33,7 +37,7 @@ export const removeTodoAsync = createAsyncThunk(
   "todos/removeTodoAsync",
   async (id) => {
     await axios.delete(
-      `${process.env.REACT_APP_API_BASE_ENDPOINT}/todos/${id}`
+      `${process.env.REACT_APP_API_BASE_ENDPOINT}/todos-test/${id}`
     );
     return id;
   }
@@ -43,17 +47,13 @@ export const removeAllTodoAsync = createAsyncThunk(
   async (completedList) => {
     for (let index = 0; index < completedList.length; index++) {
       var todo = completedList[index];
-      console.log(todo.id);
+      console.log(todo._id);
       await axios.delete(
-        `${process.env.REACT_APP_API_BASE_ENDPOINT}/todos/${todo.id}`
+        `${process.env.REACT_APP_API_BASE_ENDPOINT}/todos-test/${todo._id}`
       );
     }
-    /* completedList.forEach(async (todo) => {
-      await axios.delete(
-        `${process.env.REACT_APP_API_BASE_ENDPOINT}/todos/${todo.id}`
-      );
-    }) */ const res = await axios(
-      `${process.env.REACT_APP_API_BASE_ENDPOINT}/todos`
+    const res = await axios.get(
+      `${process.env.REACT_APP_API_BASE_ENDPOINT}/todos-test`
     );
     console.log(res.data);
     return res.data;
@@ -95,6 +95,7 @@ export const todoSlice = createSlice({
     },
     [getTodosAsync.fulfilled]: (state, action) => {
       state.items = action.payload;
+      console.log(state.items);
       state.isLoading = false;
     },
     [getTodosAsync.rejected]: (state, action) => {
@@ -116,14 +117,16 @@ export const todoSlice = createSlice({
     },
     //toggle todo
     [toggleTodoAsync.fulfilled]: (state, action) => {
-      const { id, completed } = action.payload;
-      const index = state.items.findIndex((item) => item.id === id);
+      const { _id: id, completed } = action.payload;
+      console.log(id);
+      const index = state.items.findIndex((item) => item._id === id);
+      console.log(state.items);
       state.items[index].completed = completed;
     },
     //remove todo
     [removeTodoAsync.fulfilled]: (state, action) => {
       const id = action.payload;
-      const filtered = state.items.filter((item) => item.id !== id);
+      const filtered = state.items.filter((item) => item._id !== id);
       state.items = filtered;
     },
     [removeAllTodoAsync.fulfilled]: (state) => {

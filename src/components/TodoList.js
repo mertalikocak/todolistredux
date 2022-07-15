@@ -34,19 +34,19 @@ const TodoList = () => {
   return (
     <ul className="todo-list">
       {filteredTodos.map((item) => (
-        <li key={item.id} className={item.completed ? "completed" : ""}>
+        <li key={item._id} className={item.completed ? "completed" : ""}>
           <div className="view">
             <input
               className="toggle"
               type="checkbox"
               checked={item.completed}
-              onChange={() => handleToggle(item.id, !item.completed)}
+              onChange={() => handleToggle(item._id, !item.completed)}
             />
             <label>{item.title}</label>
             <button
               className="destroy"
               onClick={() => {
-                handleDestroy(item.id);
+                handleDestroy(item._id);
               }}
             />
           </div>
