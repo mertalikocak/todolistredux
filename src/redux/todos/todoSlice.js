@@ -10,6 +10,17 @@ export const getTodosAsync = createAsyncThunk(
     return res.data.todos;
   }
 );
+
+export const getRemovedTodosAsync = createAsyncThunk(
+  "todos/getRemovedTodosAsync",
+  async () => {
+    const res = await axios.get(
+      `${process.env.REACT_APP_API_BASE_ENDPOINT}/todos-test/removed`
+    );
+    return res.data.todos;
+  }
+);
+
 export const addTodoAsync = createAsyncThunk(
   "todos/addTodoAsync",
   async (data) => {
@@ -22,19 +33,30 @@ export const addTodoAsync = createAsyncThunk(
   }
 );
 
-export const toggleTodoAsync = createAsyncThunk(
-  "todos/toggleTodoAsync",
+export const toggleCompleteTodoAsync = createAsyncThunk(
+  "todos/toggleCompleteTodoAsync",
   async ({ id, data }) => {
     const res = await axios.patch(
-      `${process.env.REACT_APP_API_BASE_ENDPOINT}/todos-test/${id}`,
+      `${process.env.REACT_APP_API_BASE_ENDPOINT}/todos-test/changeComplete/${id}`,
       data
     );
     return res.data;
   }
 );
 
-export const removeTodoAsync = createAsyncThunk(
-  "todos/removeTodoAsync",
+export const toggleRemoveTodoAsync = createAsyncThunk(
+  "todos/toggleRemoveTodoAsync",
+  async ({ id, data }) => {
+    const res = await axios.patch(
+      `${process.env.REACT_APP_API_BASE_ENDPOINT}/todos-test/changeRemove/${id}`,
+      data
+    );
+    return res.data;
+  }
+);
+
+export const deleteTodoAsync = createAsyncThunk(
+  "todos/deleteTodoAsync",
   async (id) => {
     await axios.delete(
       `${process.env.REACT_APP_API_BASE_ENDPOINT}/todos-test/${id}`
@@ -42,7 +64,48 @@ export const removeTodoAsync = createAsyncThunk(
     return id;
   }
 );
-export const removeAllTodoAsync = createAsyncThunk(
+
+export const removeCompletedTodoAsync = createAsyncThunk(
+  "todos/removeCompletedTodoAsync",
+  async (completedList) => {
+    for (let index = 0; index < completedList.length; index++) {
+      var todo = completedList[index];
+      console.log(todo._id);
+      await axios.patch(
+        `${process.env.REACT_APP_API_BASE_ENDPOINT}/todos-test/changeRemove/${todo._id}`,
+        { removed: true }
+      );
+    }
+    const res = await axios.get(
+      `${process.env.REACT_APP_API_BASE_ENDPOINT}/todos-test`
+    );
+    console.log(res.data);
+    return res.data;
+  }
+);
+
+export const clearAllRemovedTodoAsync = createAsyncThunk(
+  "todos/clearAllRemovedTodoAsync",
+  async () => {
+    var res = await axios.get(
+      `${process.env.REACT_APP_API_BASE_ENDPOINT}/todos-test/removed`
+    );
+    console.log(res.data.todos.length);
+    for (let index = 0; index < res.data.todos.length; index++) {
+      const todo = res.data.todos[index];
+      await axios.delete(
+        `${process.env.REACT_APP_API_BASE_ENDPOINT}/todos-test/${todo._id}`
+      );
+    }
+    res = await axios.get(
+      `${process.env.REACT_APP_API_BASE_ENDPOINT}/todos-test`
+    );
+    console.log(res.data);
+    return res.data;
+  }
+);
+
+/* export const removeAllTodoAsync = createAsyncThunk(
   "todos/removeAllTodoAsync",
   async (completedList) => {
     for (let index = 0; index < completedList.length; index++) {
@@ -58,13 +121,14 @@ export const removeAllTodoAsync = createAsyncThunk(
     console.log(res.data);
     return res.data;
   }
-);
+); */
 
 export const todoSlice = createSlice({
   name: "todos",
   initialState: {
     items: [],
     activeFilter: "all",
+    activeList: "defaultList",
     isLoading: false,
     error: null,
     addNewTodoLoading: false,
@@ -83,10 +147,13 @@ export const todoSlice = createSlice({
     changeActiveFilter: (state, action) => {
       state.activeFilter = action.payload;
     },
-    clearCompleted: (state) => {
+    changeActiveList: (state, action) => {
+      state.activeList = action.payload;
+    },
+    /*     clearCompleted: (state) => {
       const filtered = state.items.filter((item) => item.completed === false);
       state.items = filtered;
-    },
+    }, */
   },
   extraReducers: {
     //get Todos
@@ -95,10 +162,23 @@ export const todoSlice = createSlice({
     },
     [getTodosAsync.fulfilled]: (state, action) => {
       state.items = action.payload;
-      console.log(state.items);
+
       state.isLoading = false;
     },
     [getTodosAsync.rejected]: (state, action) => {
+      state.isLoading = false;
+      state.error = action.error.message;
+    },
+
+    [getRemovedTodosAsync.pending]: (state, action) => {
+      state.isLoading = true;
+    },
+    [getRemovedTodosAsync.fulfilled]: (state, action) => {
+      state.items = action.payload;
+
+      state.isLoading = false;
+    },
+    [getRemovedTodosAsync.rejected]: (state, action) => {
       state.isLoading = false;
       state.error = action.error.message;
     },
@@ -115,28 +195,41 @@ export const todoSlice = createSlice({
       state.addNewTodoLoading = false;
       state.error = action.error.message;
     },
-    //toggle todo
-    [toggleTodoAsync.fulfilled]: (state, action) => {
+    //toggle complete todo
+    [toggleCompleteTodoAsync.fulfilled]: (state, action) => {
       const { _id: id, completed } = action.payload;
       console.log(id);
       const index = state.items.findIndex((item) => item._id === id);
       console.log(state.items);
       state.items[index].completed = completed;
     },
-    //remove todo
-    [removeTodoAsync.fulfilled]: (state, action) => {
+    //toggle remove todo
+    [toggleRemoveTodoAsync.fulfilled]: (state, action) => {
+      const { _id: id } = action.payload;
+      const filtered = state.items.filter((item) => item._id !== id);
+      console.log(filtered);
+      state.items = filtered;
+    },
+    // delete todo
+    [deleteTodoAsync.fulfilled]: (state, action) => {
       const id = action.payload;
       const filtered = state.items.filter((item) => item._id !== id);
       state.items = filtered;
     },
-    [removeAllTodoAsync.fulfilled]: (state) => {
+
+    [removeCompletedTodoAsync.fulfilled]: (state) => {
       const filtered = state.items.filter((item) => !item.completed === true);
+      state.items = filtered;
+    },
+    [clearAllRemovedTodoAsync.fulfilled]: (state) => {
+      const filtered = state.items.filter((item) => !item.removed === true);
       state.items = filtered;
     },
   },
 });
-export const { changeActiveFilter, clearCompleted } = todoSlice.actions;
+export const { changeActiveFilter, changeActiveList } = todoSlice.actions;
 export const selectTodos = (state) => state.todos.items;
+export const selectList = (state) => state.todos.activeList;
 export const selectFilteredTodos = (state) => {
   if (state.todos.activeFilter === "all") {
     return state.todos.items;

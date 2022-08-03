@@ -21,34 +21,6 @@ mongoose
 app.use(cors());
 app.use(json());
 
-let todos = [
-  {
-    id: nanoid(),
-    title: "todo 1",
-    completed: true,
-  },
-  {
-    id: nanoid(),
-    title: "todo 2",
-    completed: false,
-  },
-  {
-    id: nanoid(),
-    title: "todo 3",
-    completed: false,
-  },
-  {
-    id: nanoid(),
-    title: "todo 4",
-    completed: false,
-  },
-  {
-    id: nanoid(),
-    title: "todo 5",
-    completed: false,
-  },
-];
-
 /* app.get("/todos", (req, res) => res.send(todos)); */
 
 /* app.post("/todos", (req, res) => {
@@ -60,7 +32,19 @@ let todos = [
 app.get("/todos-test", async (req, res) => {
   console.log("get istegi gönderildi");
   try {
-    const todos = await Todo.find({});
+    const todos = await Todo.find({ removed: false });
+
+    res.status(201).json({ todos });
+  } catch (error) {
+    console.log(error);
+    res.status(400);
+  }
+});
+
+app.get("/todos-test/removed", async (req, res) => {
+  console.log("get removed istegi gönderildi");
+  try {
+    const todos = await Todo.find({ removed: true });
 
     res.status(201).json({ todos });
   } catch (error) {
@@ -72,7 +56,11 @@ app.get("/todos-test", async (req, res) => {
 app.post("/todos-test", async (req, res) => {
   console.log("post istegi gönderildi");
   try {
-    const todo = await Todo.create({ title: req.body.title, completed: false });
+    const todo = await Todo.create({
+      title: req.body.title,
+      completed: false,
+      removed: false,
+    });
 
     res.status(201).json(todo);
   } catch (error) {
@@ -93,13 +81,28 @@ app.delete("/todos-test/:_id", async (req, res) => {
   }
 });
 
-app.patch("/todos-test/:_id", async (req, res) => {
-  console.log("patch istegi gönderildi");
+app.patch("/todos-test/changeComplete/:_id", async (req, res) => {
+  console.log("patch complete istegi gönderildi");
   try {
     const id = req.params._id;
     const todo = await Todo.findById(id);
     const completed = Boolean(req.body.completed);
     todo.completed = completed;
+    await todo.save();
+    res.status(201).json(todo);
+  } catch (error) {
+    console.log(error);
+    res.status(400);
+  }
+});
+
+app.patch("/todos-test/changeRemove/:_id", async (req, res) => {
+  console.log("patch remove istegi gönderildi");
+  try {
+    const id = req.params._id;
+    const todo = await Todo.findById(id);
+    const removed = Boolean(req.body.removed);
+    todo.removed = removed;
     await todo.save();
     res.status(201).json(todo);
   } catch (error) {

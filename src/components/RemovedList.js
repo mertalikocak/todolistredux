@@ -1,30 +1,33 @@
+import React from "react";
 import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
+  getRemovedTodosAsync,
   selectFilteredTodos,
-  getTodosAsync,
-  toggleCompleteTodoAsync,
+  deleteTodoAsync,
   toggleRemoveTodoAsync,
 } from "../redux/todos/todoSlice";
-
-const TodoList = () => {
+function RemovedList() {
   const filteredTodos = useSelector(selectFilteredTodos);
   const dispatch = useDispatch();
   const isLoading = useSelector((state) => state.todos.isLoading);
   const error = useSelector((state) => state.todos.error);
 
   useEffect(() => {
-    dispatch(getTodosAsync());
+    dispatch(getRemovedTodosAsync());
   }, [dispatch]);
 
-  const handleDestroy = async (id, removed) => {
-    if (window.confirm("To Do will move to removed list. Are You Sure?")) {
+  const handleDestroy = async (id) => {
+    if (window.confirm("To Do will be deleted forever. Are You Sure?")) {
+      await dispatch(deleteTodoAsync(id));
+    }
+  };
+  const handleSave = async (id, removed) => {
+    if (window.confirm("To Do will move to Todo List. Are You Sure?")) {
       await dispatch(toggleRemoveTodoAsync({ id, data: { removed } }));
     }
   };
-  const handleToggle = async (id, completed) => {
-    await dispatch(toggleCompleteTodoAsync({ id, data: { completed } }));
-  };
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -32,21 +35,28 @@ const TodoList = () => {
     return <div>{error}</div>;
   }
   return (
-    <ul className="todo-list" {...console.log("a")}>
+    <ul className="todo-list">
       {filteredTodos.map((item) => (
-        <li key={item._id} className={item.completed ? "completed" : ""}>
+        <li key={item._id}>
           <div className="view">
-            <input
+            {/*<input
               className="toggle"
               type="checkbox"
               checked={item.completed}
               onChange={() => handleToggle(item._id, !item.completed)}
-            />
+            /> */}
             <label>{item.title}</label>
+
+            <button
+              className="save"
+              onClick={() => {
+                handleSave(item._id, !item.removed);
+              }}
+            />
             <button
               className="destroy"
               onClick={() => {
-                handleDestroy(item._id, !item.removed);
+                handleDestroy(item._id);
               }}
             />
           </div>
@@ -54,6 +64,6 @@ const TodoList = () => {
       ))}
     </ul>
   );
-};
+}
 
-export default TodoList;
+export default RemovedList;
