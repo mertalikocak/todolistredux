@@ -49,13 +49,13 @@ let todos = [
   },
 ];
 
-app.get("/todos", (req, res) => res.send(todos));
+/* app.get("/todos", (req, res) => res.send(todos)); */
 
-app.post("/todos", (req, res) => {
+/* app.post("/todos", (req, res) => {
   const todo = { title: req.body.title, id: nanoid(), completed: false };
   todos.push(todo);
   return res.send(todo);
-});
+}); */
 
 app.get("/todos-test", async (req, res) => {
   console.log("get istegi gönderildi");
@@ -108,7 +108,7 @@ app.patch("/todos-test/:_id", async (req, res) => {
   }
 });
 
-app.patch("/todos/:id", (req, res) => {
+/* app.patch("/todos/:id", (req, res) => {
   const id = req.params.id;
   const index = todos.findIndex((todo) => todo.id == id);
   const completed = Boolean(req.body.completed);
@@ -116,9 +116,9 @@ app.patch("/todos/:id", (req, res) => {
     todos[index].completed = completed;
   }
   return res.send(todos[index]);
-});
+}); */
 
-app.delete("/todos/:id", (req, res) => {
+/* app.delete("/todos/:id", (req, res) => {
   const id = req.params.id;
   const index = todos.findIndex((todo) => todo.id == id);
   if (index > -1) {
@@ -126,7 +126,7 @@ app.delete("/todos/:id", (req, res) => {
   }
 
   res.send(todos);
-});
+}); */
 
 const PORT = process.env.PORT || 5000;
 
